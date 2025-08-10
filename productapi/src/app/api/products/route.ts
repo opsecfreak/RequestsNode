@@ -109,6 +109,39 @@ export async function POST(request: NextRequest) {
     if (body.categories) productData.categories = body.categories;
     if (body.images) productData.images = body.images;
 
+    // Handle SEO/RankMath metadata
+    const meta_data = [];
+    if (body.seo) {
+      if (body.seo.title) {
+        meta_data.push({
+          key: 'rank_math_title',
+          value: body.seo.title
+        });
+      }
+      if (body.seo.description) {
+        meta_data.push({
+          key: 'rank_math_description',
+          value: body.seo.description
+        });
+      }
+      if (body.seo.focus_keyword) {
+        meta_data.push({
+          key: 'rank_math_focus_keyword',
+          value: body.seo.focus_keyword
+        });
+      }
+      if (body.seo.keywords) {
+        meta_data.push({
+          key: 'rank_math_keywords',
+          value: body.seo.keywords
+        });
+      }
+    }
+
+    if (meta_data.length > 0) {
+      productData.meta_data = meta_data;
+    }
+
     const response = await fetch(`${WOOCOMMERCE_BASE_URL}/products`, {
       method: 'POST',
       headers: {
