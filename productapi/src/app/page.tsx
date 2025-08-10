@@ -771,7 +771,8 @@ export default function Home() {
       
       if (response.success) {
         setGeneratedProduct(response.data);
-        setStatus("Product generated successfully! You can now review and edit it.");
+        const modelInfo = response.model_used ? ` (using ${response.model_used})` : '';
+        setStatus("Product generated successfully!" + modelInfo + " You can now review and edit it.");
       } else {
         throw new Error(response.error);
       }

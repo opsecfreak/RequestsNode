@@ -62,15 +62,33 @@ Guidelines:
 - Focus keyword should be the main product keyword for SEO
 - Meta description should be 150-160 characters`;
 
-    const completion = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: prompt }
-      ],
-      temperature: 0.7,
-      max_tokens: 1500,
-    });
+    // Try different models in order of preference
+    const models = ['gpt-3.5-turbo', 'gpt-4o-mini', 'gpt-4'];
+    let completion = null;
+    let lastError = null;
+
+    for (const model of models) {
+      try {
+        completion = await openai.chat.completions.create({
+          model: model,
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: prompt }
+          ],
+          temperature: 0.7,
+          max_tokens: 1500,
+        });
+        break; // Success, exit the loop
+      } catch (error: any) {
+        lastError = error;
+        console.log(`Failed with model ${model}:`, error.message);
+        // Continue to next model
+      }
+    }
+
+    if (!completion) {
+      throw lastError || new Error('All AI models failed');
+    }
 
     const response = completion.choices[0]?.message?.content;
     
@@ -84,7 +102,8 @@ Guidelines:
       return NextResponse.json({
         success: true,
         data: productData,
-        message: 'Product data generated successfully'
+        message: 'Product data generated successfully',
+        model_used: completion.model
       });
     } catch (parseError) {
       // If JSON parsing fails, return the raw response
