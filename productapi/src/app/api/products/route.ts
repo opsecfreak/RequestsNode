@@ -71,16 +71,43 @@ export async function POST(request: NextRequest) {
     }
 
     // Prepare product data for WooCommerce
-    const productData = {
+    const productData: any = {
       name: body.name,
       type: body.type || 'simple',
       regular_price: body.regular_price.toString(),
-      description: body.description || '',
-      short_description: body.short_description || '',
-      categories: body.categories || [],
-      images: body.images || [],
       status: body.status || 'publish'
     };
+
+    // Add optional fields if provided
+    if (body.sale_price) productData.sale_price = body.sale_price.toString();
+    if (body.description) productData.description = body.description;
+    if (body.short_description) productData.short_description = body.short_description;
+    if (body.sku) productData.sku = body.sku;
+    if (body.weight) productData.weight = body.weight.toString();
+    
+    // Handle stock management
+    if (body.manage_stock !== undefined) {
+      productData.manage_stock = body.manage_stock;
+      if (body.manage_stock && body.stock_quantity !== undefined) {
+        productData.stock_quantity = body.stock_quantity;
+      }
+    }
+    
+    if (body.stock_status) productData.stock_status = body.stock_status;
+
+    // Handle dimensions
+    const dimensions: any = {};
+    if (body.length) dimensions.length = body.length.toString();
+    if (body.width) dimensions.width = body.width.toString();
+    if (body.height) dimensions.height = body.height.toString();
+    
+    if (Object.keys(dimensions).length > 0) {
+      productData.dimensions = dimensions;
+    }
+
+    // Handle categories and images if provided
+    if (body.categories) productData.categories = body.categories;
+    if (body.images) productData.images = body.images;
 
     const response = await fetch(`${WOOCOMMERCE_BASE_URL}/products`, {
       method: 'POST',
